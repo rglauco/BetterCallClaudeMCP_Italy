@@ -46,10 +46,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build -t bettercallclaude-italy:test .
+        run: docker build -f mcp-servers-http/Dockerfile -t bettercallclaude-italy:test .
       - name: Test Docker healthcheck
         run: |
           docker run -d --name test-mcp -p 8080:8080 bettercallclaude-italy:test
-          sleep 5
+          sleep 8
           curl -sf http://localhost:8080/health || (docker logs test-mcp && exit 1)
           docker stop test-mcp

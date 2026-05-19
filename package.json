@@ -1,0 +1,43 @@
+{
+  "name": "bettercallclaude-mcp-italia",
+  "version": "1.0.0",
+  "description": "BetterCallClaude Italia — MCP Servers for Italian Legal Research",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "mcp-servers/*",
+    "mcp-servers-http"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "dev": "npm run dev --workspaces --if-present",
+    "start": "node mcp-servers-http/dist/index.js",
+    "typecheck": "npm run typecheck --workspaces",
+    "lint": "eslint --ext .ts .",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "clean": "npm run clean --workspaces --if-present"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "legal",
+    "italian-law",
+    "normattiva",
+    "cassazione",
+    "corte-costituzionale"
+  ],
+  "author": "BetterCallClaude Associazione",
+  "license": "AGPL-3.0-or-later",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.6"
+  }
+}

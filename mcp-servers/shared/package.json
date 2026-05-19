@@ -1,0 +1,35 @@
+{
+  "name": "@bettercallclaude-italia/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities for BetterCallClaude Italia MCP servers",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "mcp",
+    "italian-law",
+    "shared"
+  ],
+  "author": "BetterCallClaude Associazione",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "axios": "^1.7.0",
+    "bottleneck": "^2.19.5",
+    "lru-cache": "^10.4.0",
+    "p-retry": "^6.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.6"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

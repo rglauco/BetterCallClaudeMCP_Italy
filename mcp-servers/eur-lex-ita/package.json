@@ -1,0 +1,34 @@
+{
+  "name": "@bettercallclaude-italia/eur-lex-ita",
+  "version": "1.0.0",
+  "description": "DESC",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "mcp",
+    "italian-law"
+  ],
+  "author": "BetterCallClaude Associazione",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "@bettercallclaude-italia/shared": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "cheerio": "^1.2.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.6"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

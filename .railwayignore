@@ -1,0 +1,11 @@
+# Escludi file non necessari per il build Docker
+node_modules/
+dist/
+.git/
+*.log
+.env
+.env.local
+coverage/
+.vscode/
+.idea/
+.DS_Store

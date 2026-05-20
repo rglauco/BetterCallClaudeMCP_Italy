@@ -105,12 +105,12 @@ app.get('/:serverName/mcp', (_req: Request, res: Response) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
+// Start server — bind to 0.0.0.0 to accept connections from outside the container
+app.listen(PORT, '0.0.0.0', () => {
   console.error(
     `BetterCallClaude Italia MCP Aggregator running on port ${PORT}`
   );
-  console.error(`Health check: http://localhost:${PORT}/health`);
+  console.error(`Health check: http://0.0.0.0:${PORT}/health`);
 
   const servers = listServers();
   if (servers.length === 0) {

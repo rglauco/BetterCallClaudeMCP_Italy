@@ -81,6 +81,7 @@ COPY --from=builder /app/mcp-servers-http/package.json mcp-servers-http/
 # Install production dependencies only
 RUN npm ci --omit=dev
 
+ENV NODE_ENV=production
 # Railway sets PORT env var; default to 8080
 EXPOSE 8080
 

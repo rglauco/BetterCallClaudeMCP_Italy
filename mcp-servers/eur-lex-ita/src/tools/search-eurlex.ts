@@ -148,7 +148,7 @@ export async function searchEurLex(input: SearchEurLexInput): Promise<{
     const bindings = response.results?.bindings ?? [];
 
     return {
-      atti: bindings.map((b) => ({
+      atti: bindings.map((b: Record<string, { value: string } | undefined>) => ({
         celex: b.celex?.value ?? '',
         title: b.title?.value ?? '(titolo non disponibile)',
         date: b.date?.value ?? '',

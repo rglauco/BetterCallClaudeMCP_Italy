@@ -51,6 +51,10 @@ jobs:
           node-version: '22.x'
           cache: 'npm'
       - run: npm ci
+      - name: Build shared package first
+        run: npm run build --workspace=@bettercallclaude-italia/shared
+      - name: Build all workspace packages
+        run: npm run build --workspaces
       - run: npm run typecheck --workspaces
 
   docker:

@@ -6,10 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  # Suppress Node.js 20 deprecation warnings until actions are updated
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -28,6 +24,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify workspace symlinks
+        run: |
+          echo "=== Workspace symlinks ==="
+          ls -la node_modules/@bettercallclaude-italia/ || true
+          echo "=== Dist directories ==="
+          for d in mcp-servers/*/dist mcp-servers-http/dist; do
+            echo "$d: $(ls "$d" 2>/dev/null | wc -l) files"
+          done
+
       - name: Build shared package first
         run: npm run build --workspace=@bettercallclaude-italia/shared
 
@@ -35,7 +40,7 @@ jobs:
         run: npm run build --workspaces
 
       - name: Run tests
-        run: npm test --workspaces
+        run: npm run test:run
 
   lint:
     runs-on: ubuntu-latest
@@ -56,7 +61,7 @@ jobs:
         run: docker build -f mcp-servers-http/Dockerfile -t bettercallclaude-italy:test .
       - name: Test Docker healthcheck
         run: |
-          docker run -d --name test-mcp -p 8080:8080 bettercallclaude-italy:test
+          docker run -d --rm --name test-mcp -p 8080:8080 bettercallclaude-italy:test
           sleep 8
-          curl -sf http://localhost:8080/health || (docker logs test-mcp && exit 1)
+          curl -sf http://localhost:8080/health || (docker logs test-mcp; docker stop test-mcp; exit 1)
           docker stop test-mcp

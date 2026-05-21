@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { fetchWithRetry, parseApiError } from '@bettercallclaude-italia/shared';
+import { fetchWithRetry, parseApiError, buildSearchEngineUrls, extractEstremi, buildEcliUrlCassazione } from '@bettercallclaude-italia/shared';
 import type { SearchMassimeInput } from '../types.js';
 
 /**
@@ -16,6 +16,9 @@ export async function searchMassime(input: SearchMassimeInput): Promise<{
   totali: number;
   urlRicerca: string;
   urlItalgiure: string;
+  urlEcli?: string;
+  urlGoogle: string;
+  urlDuckDuckGo: string;
   note: string;
 }> {
   // Try the public search page
@@ -27,8 +30,15 @@ export async function searchMassime(input: SearchMassimeInput): Promise<{
   const urlItalgiure = `https://www.italgiure.giustizia.it/sncass/sncass.php?` +
     new URLSearchParams({ q: input.query, tipo: 'massime' }).toString();
 
-  // DeJure open-access alternative
-  const urlDejure = `https://www.dejure.org/dictionary/search.php?query=${encodeURIComponent(input.query)}`;
+  // Extract numero/anno from query for ECLI fallback
+  const estremi = extractEstremi(input.query);
+  const urlEcli = estremi ? buildEcliUrlCassazione(estremi.anno, estremi.numero) : undefined;
+
+  // Search engine fallback URLs
+  const { google, duckduckgo } = buildSearchEngineUrls('cortedicassazione.it', [
+    input.query,
+    'sentenza',
+  ]);
 
   try {
     const html = await fetchWithRetry(
@@ -55,7 +65,10 @@ export async function searchMassime(input: SearchMassimeInput): Promise<{
         totali: 0,
         urlRicerca,
         urlItalgiure,
-        note: 'Il portale della Corte di Cassazione ha attivato protezione anti-bot o restrizioni di accesso. Si consiglia di consultare direttamente gli URL forniti.',
+        urlEcli,
+        urlGoogle: google,
+        urlDuckDuckGo: duckduckgo,
+        note: 'Il portale della Corte di Cassazione ha attivato protezione anti-bot. Prova: 1) Google site-search, 2) ECLI diretto (se disponibile), 3) ItalGiure (operatori del diritto).',
       };
     }
 
@@ -80,9 +93,12 @@ export async function searchMassime(input: SearchMassimeInput): Promise<{
       totali: massime.length,
       urlRicerca,
       urlItalgiure,
+      urlEcli,
+      urlGoogle: google,
+      urlDuckDuckGo: duckduckgo,
       note: massime.length > 0
-        ? 'Risultati estratti dalla porzione pubblica. Accesso completo riservato agli operatori giuridici su ItalGiure. Alternativa open-access: DeJure.'
-        : 'Nessun risultato estratto. Consultare direttamente il portale, ItalGiure (operatori del diritto) o DeJure (open-access).',
+        ? 'Risultati estratti dalla porzione pubblica. Accesso completo riservato agli operatori giuridici su ItalGiure.'
+        : 'Nessun risultato estratto. Consultare direttamente il portale, ItalGiure (operatori del diritto), o usare i motori di ricerca forniti.',
     };
   } catch (error) {
     const parsed = parseApiError(error);
@@ -91,7 +107,10 @@ export async function searchMassime(input: SearchMassimeInput): Promise<{
       totali: 0,
       urlRicerca,
       urlItalgiure,
-      note: `${parsed.code}: ${parsed.message}. Il portale della Corte di Cassazione blocca sistematicamente l'accesso. Per operatori del diritto: ItalGiure (${urlItalgiure}). Alternativa open-access: DeJure (${urlDejure}).`,
+      urlEcli,
+      urlGoogle: google,
+      urlDuckDuckGo: duckduckgo,
+      note: `${parsed.code}: ${parsed.message}. Il portale blocca sistematicamente. Prova: 1) Google site-search (${google}), 2) ECLI diretto, 3) ItalGiure per operatori del diritto (${urlItalgiure}).`,
     };
   }
 }

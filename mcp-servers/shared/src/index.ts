@@ -8,3 +8,9 @@ export {
   eurLexClient,
 } from './http-client.js';
 export type { HttpClientOptions } from './http-client.js';
+export {
+  buildSearchEngineUrls,
+  buildEcliUrlCorteCostituzionale,
+  buildEcliUrlCassazione,
+  extractEstremi,
+} from './fallback-urls.js';

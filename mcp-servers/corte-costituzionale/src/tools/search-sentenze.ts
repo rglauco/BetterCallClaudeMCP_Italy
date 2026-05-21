@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { fetchWithRetry, parseApiError } from '@bettercallclaude-italia/shared';
+import { fetchWithRetry, parseApiError, buildSearchEngineUrls, buildEcliUrlCorteCostituzionale } from '@bettercallclaude-italia/shared';
 import type { SearchSentenzeInput } from '../types.js';
 
 /**
@@ -10,6 +10,9 @@ import type { SearchSentenzeInput } from '../types.js';
 function buildSearchUrls(input: SearchSentenzeInput): {
   ricerca: string;
   consultazione: string;
+  urlEcli?: string;
+  urlGoogle: string;
+  urlDuckDuckGo: string;
 } {
   const base = 'https://www.cortecostituzionale.it';
 
@@ -24,7 +27,20 @@ function buildSearchUrls(input: SearchSentenzeInput): {
     ? `${base}/actionSchedaPronuncia.do?param_ecli=ECLI:IT:COST:${input.anno}:${input.numero}`
     : `${base}/actionPronuncia.do`;
 
-  return { ricerca, consultazione };
+  // ECLI direct URL
+  const urlEcli = input.anno && input.numero
+    ? buildEcliUrlCorteCostituzionale(input.anno, input.numero)
+    : undefined;
+
+  // Search engine fallback URLs
+  const { google, duckduckgo } = buildSearchEngineUrls('cortecostituzionale.it', [
+    input.numero ? `sentenza n.${input.numero}` : '',
+    input.anno ? String(input.anno) : '',
+    input.parolaChiave || '',
+    input.materia || '',
+  ]);
+
+  return { ricerca, consultazione, urlEcli, urlGoogle: google, urlDuckDuckGo: duckduckgo };
 }
 
 export async function searchSentenze(input: SearchSentenzeInput): Promise<{
@@ -38,9 +54,12 @@ export async function searchSentenze(input: SearchSentenzeInput): Promise<{
   totali: number;
   urlRicerca: string;
   urlConsultazione: string;
+  urlEcli?: string;
+  urlGoogle: string;
+  urlDuckDuckGo: string;
   note: string;
 }> {
-  const { ricerca, consultazione } = buildSearchUrls(input);
+  const { ricerca, consultazione, urlEcli, urlGoogle, urlDuckDuckGo } = buildSearchUrls(input);
 
   try {
     const html = await fetchWithRetry(
@@ -109,15 +128,12 @@ export async function searchSentenze(input: SearchSentenzeInput): Promise<{
       totali: sentenze.length,
       urlRicerca: ricerca,
       urlConsultazione: consultazione,
+      urlEcli,
+      urlGoogle,
+      urlDuckDuckGo,
       note: sentenze.length > 0
         ? 'Risultati estratti euristici. Verificare sul sito ufficiale.'
-        : 'Nessun risultato euristico. Il sito potrebbe essere protetto da anti-bot. Usare gli URL forniti.',
-    } as {
-      sentenze: Array<{ numero?: string; anno?: number; data?: string; oggetto?: string; url?: string }>;
-      totali: number;
-      urlRicerca: string;
-      urlConsultazione: string;
-      note: string;
+        : 'Nessun risultato euristico. Il sito potrebbe essere protetto da anti-bot. Usare gli URL forniti (prova ECLI → Google → DuckDuckGo).',
     };
   } catch (error) {
     const parsed = parseApiError(error);
@@ -126,13 +142,10 @@ export async function searchSentenze(input: SearchSentenzeInput): Promise<{
       totali: 0,
       urlRicerca: ricerca,
       urlConsultazione: consultazione,
-      note: `Accesso al sito limitato (${parsed.code}: ${parsed.message}). Il portale della Corte Costituzionale utilizza protezione anti-bot. Si consiglia di consultare direttamente gli URL forniti.`,
-    } as unknown as {
-      sentenze: Array<{ numero?: string; anno?: number; data?: string; oggetto?: string; url?: string }>;
-      totali: number;
-      urlRicerca: string;
-      urlConsultazione: string;
-      note: string;
+      urlEcli,
+      urlGoogle,
+      urlDuckDuckGo,
+      note: `Accesso al sito limitato (${parsed.code}: ${parsed.message}). Il portale utilizza protezione anti-bot. Prova nell'ordine: 1) ECLI diretto, 2) Google site-search, 3) DuckDuckGo.`,
     };
   }
 }

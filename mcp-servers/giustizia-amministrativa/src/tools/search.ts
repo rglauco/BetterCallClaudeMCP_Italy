@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { fetchWithRetry, parseApiError } from '@bettercallclaude-italia/shared';
+import { fetchWithRetry, parseApiError, buildSearchEngineUrls } from '@bettercallclaude-italia/shared';
 import type { SearchSentenzeInput } from '../types.js';
 
 /**
@@ -18,6 +18,8 @@ export async function searchGiustiziaAmministrativa(input: SearchSentenzeInput):
   }>;
   totali: number;
   urlRicerca: string;
+  urlGoogle: string;
+  urlDuckDuckGo: string;
   note: string;
 }> {
   const params = new URLSearchParams();
@@ -30,6 +32,14 @@ export async function searchGiustiziaAmministrativa(input: SearchSentenzeInput):
   if (input.dataA) params.set('dataA', input.dataA);
 
   const url = `https://www.giustizia-amministrativa.it/cdsintra/cdsintra/AmministrazionePortale/RicercaNew/index.html?${params.toString()}`;
+
+  const { google, duckduckgo } = buildSearchEngineUrls('giustizia-amministrativa.it', [
+    input.parolaChiave || '',
+    input.organo || '',
+    input.sezione || '',
+    input.dataDa ? `dal ${input.dataDa}` : '',
+    input.dataA ? `al ${input.dataA}` : '',
+  ]);
 
   try {
     const controller = new AbortController();
@@ -99,20 +109,21 @@ export async function searchGiustiziaAmministrativa(input: SearchSentenzeInput):
       sentenze: sentenze.slice(0, input.pageSize ?? 20),
       totali: sentenze.length,
       urlRicerca: url,
+      urlGoogle: google,
+      urlDuckDuckGo: duckduckgo,
       note: sentenze.length > 0
         ? 'Risultati estratti euristicamente. Verificare sul portale ufficiale per la completezza.'
-        : 'Nessun risultato trovato. Verificare i parametri di ricerca o consultare direttamente il portale.',
+        : 'Nessun risultato trovato. Verificare i parametri di ricerca o consultare direttamente il portale / motori di ricerca forniti.',
     };
   } catch (error) {
     const parsed = parseApiError(error);
-    const urlDejure = input.parolaChiave
-      ? `https://www.dejure.org/dictionary/search.php?query=${encodeURIComponent(input.parolaChiave)}`
-      : undefined;
     return {
       sentenze: [],
       totali: 0,
       urlRicerca: url,
-      note: `${parsed.code}: ${parsed.message}. Il portale giustizia-amministrativa.it è spesso instabile. Si consiglia di consultare direttamente l'URL fornito.${urlDejure ? ` Alternativa open-access: ${urlDejure}` : ''}`,
+      urlGoogle: google,
+      urlDuckDuckGo: duckduckgo,
+      note: `${parsed.code}: ${parsed.message}. Il portale è spesso instabile. Si consiglia di consultare direttamente l'URL del portale o usare i motori di ricerca forniti.`,
     };
   }
 }

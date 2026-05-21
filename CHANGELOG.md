@@ -5,6 +5,16 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/),
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Migliorato
+
+- **Fallback scraper robusti** per i 3 server con accesso limitato:
+  - `corte-costituzionale` — descrizione tool aggiornata con avviso anti-bot; fallback a URL diretti ECLI
+  - `giustizia-amministrativa` — timeout fetch aumentato a 25s; fallback a URL DeJure open-access
+  - `cassazione` — rilevamento rapido HTTP 403; fallback a ItalGiure + DeJure con URL completi nella risposta
+- **Documentazione** — `AGENTS.md` aggiornato con tabella affidabilità fonti e strategia fallback
+
 ## [1.0.0] - 2026-05-19
 
 ### Aggiunto

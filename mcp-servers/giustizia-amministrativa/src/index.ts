@@ -16,6 +16,8 @@ const tools: Tool[] = [
     name: 'giustizia-amministrativa:search',
     description: `Ricerca sentenze di TAR e Consiglio di Stato.
 
+⚠️ LIMITAZIONE: il portale giustizia-amministrativa.it utilizza Liferay ed è spesso instabile o lento. Lo scraping può fallire con timeout. In caso di errore, il tool restituisce URL diretti per la consultazione manuale.
+
 Parametri:
 - parolaChiave: parola chiave
 - sezione: sezione giurisdizionale

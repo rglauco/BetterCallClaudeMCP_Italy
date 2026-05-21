@@ -21,6 +21,8 @@ const tools: Tool[] = [
     name: 'corte-costituzionale:search',
     description: `Ricerca sentenze della Corte Costituzionale italiana.
 
+⚠️ LIMITAZIONE: il portale della Corte Costituzionale (cortecostituzionale.it) utilizza protezione anti-bot (DataDome). Lo scraping può fallire. In caso di errore, il tool restituisce URL diretti per la consultazione manuale.
+
 Parametri:
 - numero: numero sentenza
 - anno: anno sentenza

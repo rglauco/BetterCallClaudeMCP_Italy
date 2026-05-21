@@ -27,6 +27,9 @@ export async function searchMassime(input: SearchMassimeInput): Promise<{
   const urlItalgiure = `https://www.italgiure.giustizia.it/sncass/sncass.php?` +
     new URLSearchParams({ q: input.query, tipo: 'massime' }).toString();
 
+  // DeJure open-access alternative
+  const urlDejure = `https://www.dejure.org/dictionary/search.php?query=${encodeURIComponent(input.query)}`;
+
   try {
     const html = await fetchWithRetry(
       'cassazione',
@@ -38,6 +41,7 @@ export async function searchMassime(input: SearchMassimeInput): Promise<{
             'Accept-Language': 'it-IT,it;q=0.9',
           },
         }).then(async (res) => {
+          if (res.status === 403) throw new Error('HTTP 403 - Accesso negato dal portale');
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return res.text();
         }),
@@ -77,8 +81,8 @@ export async function searchMassime(input: SearchMassimeInput): Promise<{
       urlRicerca,
       urlItalgiure,
       note: massime.length > 0
-        ? 'Risultati estratti dalla porzione pubblica. Accesso completo riservato agli operatori giuridici su ItalGiure.'
-        : 'Nessun risultato estratto. Consultare direttamente il portale o ItalGiure.',
+        ? 'Risultati estratti dalla porzione pubblica. Accesso completo riservato agli operatori giuridici su ItalGiure. Alternativa open-access: DeJure.'
+        : 'Nessun risultato estratto. Consultare direttamente il portale, ItalGiure (operatori del diritto) o DeJure (open-access).',
     };
   } catch (error) {
     const parsed = parseApiError(error);
@@ -87,7 +91,7 @@ export async function searchMassime(input: SearchMassimeInput): Promise<{
       totali: 0,
       urlRicerca,
       urlItalgiure,
-      note: `${parsed.code}: ${parsed.message}. Il portale della Corte di Cassazione ha restrizioni di accesso. Per ricerche complete utilizzare ItalGiure (accesso riservato agli operatori del diritto).`,
+      note: `${parsed.code}: ${parsed.message}. Il portale della Corte di Cassazione blocca sistematicamente l'accesso. Per operatori del diritto: ItalGiure (${urlItalgiure}). Alternativa open-access: DeJure (${urlDejure}).`,
     };
   }
 }

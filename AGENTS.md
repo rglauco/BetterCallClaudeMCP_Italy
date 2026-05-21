@@ -51,15 +51,25 @@ L'aggregatore in `mcp-servers-http/src/server-registry.ts` importa la factory di
 
 ## Fonti dati
 
-| Server | Fonte | Tipo accesso |
-|---|---|---|
-| normattiva | dati.normattiva.it | Open Data API |
-| corte-costituzionale | cortecostituzionale.it | Open (web/API) |
-| giustizia-amministrativa | giustizia-amministrativa.it | Open (web/API) |
-| cassazione | italgiure.giustizia.it | Porzione pubblica |
-| eur-lex-ita | eur-lex.europa.eu | Open + API + SPARQL |
-| legal-citations-ita | Logica interna | — |
-| legal-persona-ita | Logica interna | — |
+| Server | Fonte | Tipo accesso | Affidabilità |
+|---|---|---|---|
+| normattiva | dati.normattiva.it | Open Data API | ✅ Alta |
+| corte-costituzionale | cortecostituzionale.it | Web scraping | ⚠️ Bassa (anti-bot DataDome) |
+| giustizia-amministrativa | giustizia-amministrativa.it | Web scraping | ⚠️ Bassa (Liferay instabile) |
+| cassazione | cortedicassazione.it / italgiure.giustizia.it | Web scraping / Istituzionale | ❌ Molto bassa (403 bloccante) |
+| eur-lex-ita | eur-lex.europa.eu | Open + API + SPARQL | ✅ Alta |
+| legal-citations-ita | Logica interna | — | ✅ Alta |
+| legal-persona-ita | Logica interna | — | ✅ Alta |
+
+### Strategia fallback per scraper problematici
+
+I 3 server basati su scraping (corte-costituzionale, giustizia-amministrativa, cassazione) sono progettati per restituire **URL diretti di consultazione** quando lo scraping fallisce, invece di restituire errori grezzi. Questo permette all'utente (o a Claude) di consultare manualmente le fonti.
+
+- **Corte Costituzionale:** fallback a `actionPronuncia.do` e `actionSchedaPronuncia.do` con ECLI
+- **Giustizia Amministrativa:** fallback al portale Liferay + URL DeJure open-access
+- **Cassazione:** fallback a ItalGiure (operatori del diritto) + DeJure (open-access)
+
+**Non usare Puppeteer/Playwright** per aggirare le protezioni: violerebbe i ToS dei portali, aumenterebbe i tempi di deploy e non risolverebbe in modo affidabile.
 
 ## Branching
 

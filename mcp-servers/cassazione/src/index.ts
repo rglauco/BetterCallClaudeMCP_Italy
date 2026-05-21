@@ -16,6 +16,8 @@ const tools: Tool[] = [
     name: 'cassazione:search_massime',
     description: `Ricerca massime della Corte di Cassazione (porzione pubblica).
 
+⚠️ LIMITAZIONE: il portale della Corte di Cassazione (cortedicassazione.it) blocca sistematicamente l'accesso con HTTP 403. Lo scraping non è possibile. Il tool restituisce URL di ricerca alternativi (ItalGiure per operatori del diritto) e suggerimenti per la consultazione manuale.
+
 Parametri:
 - query (obbligatorio): parole chiave
 - page / pageSize: paginazione`,

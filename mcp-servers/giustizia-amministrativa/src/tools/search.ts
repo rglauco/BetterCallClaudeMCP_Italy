@@ -32,16 +32,21 @@ export async function searchGiustiziaAmministrativa(input: SearchSentenzeInput):
   const url = `https://www.giustizia-amministrativa.it/cdsintra/cdsintra/AmministrazionePortale/RicercaNew/index.html?${params.toString()}`;
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25_000);
+
     const html = await fetchWithRetry(
       'giustiziaamministrativa',
       () =>
         fetch(url, {
+          signal: controller.signal,
           headers: {
             'User-Agent': 'Mozilla/5.0 (BetterCallClaude-MCP/1.0)',
             Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'it-IT,it;q=0.9',
           },
         }).then(async (res) => {
+          clearTimeout(timeout);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return res.text();
         }),
@@ -100,11 +105,14 @@ export async function searchGiustiziaAmministrativa(input: SearchSentenzeInput):
     };
   } catch (error) {
     const parsed = parseApiError(error);
+    const urlDejure = input.parolaChiave
+      ? `https://www.dejure.org/dictionary/search.php?query=${encodeURIComponent(input.parolaChiave)}`
+      : undefined;
     return {
       sentenze: [],
       totali: 0,
       urlRicerca: url,
-      note: `${parsed.code}: ${parsed.message}. Usare l'URL di ricerca fornito per consultare direttamente il portale.`,
+      note: `${parsed.code}: ${parsed.message}. Il portale giustizia-amministrativa.it è spesso instabile. Si consiglia di consultare direttamente l'URL fornito.${urlDejure ? ` Alternativa open-access: ${urlDejure}` : ''}`,
     };
   }
 }

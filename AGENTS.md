@@ -56,7 +56,7 @@ L'aggregatore in `mcp-servers-http/src/server-registry.ts` importa la factory di
 | normattiva | dati.normattiva.it | Open Data API | ✅ Alta |
 | corte-costituzionale | cortecostituzionale.it | Web scraping | ⚠️ Bassa (anti-bot DataDome) |
 | giustizia-amministrativa | giustizia-amministrativa.it | Web scraping | ⚠️ Bassa (Liferay instabile) |
-| cassazione | cortedicassazione.it / italgiure.giustizia.it | Web scraping / Istituzionale | ❌ Molto bassa (403 bloccante) |
+| cassazione | italgiure.giustizia.it (API Solr CED) | API Solr autenticata (cookie sessione) | ⚠️ Media (richiede autenticazione professionale/SPID) |
 | eur-lex-ita | eur-lex.europa.eu | Open + API + SPARQL | ✅ Alta |
 | legal-citations-ita | Logica interna | — | ✅ Alta |
 | legal-persona-ita | Logica interna | — | ✅ Alta |
@@ -67,7 +67,7 @@ I 3 server basati su scraping (corte-costituzionale, giustizia-amministrativa, c
 
 - **Corte Costituzionale:** fallback a `actionPronuncia.do` e `actionSchedaPronuncia.do` con ECLI
 - **Giustizia Amministrativa:** fallback al portale Liferay + URL DeJure open-access
-- **Cassazione:** fallback a ItalGiure (operatori del diritto) + DeJure (open-access)
+- **Cassazione:** primario via API Solr ItalGiure con cookie di sessione ASP; fallback automatico a URL diretti (ItalGiure manuale, Google, DuckDuckGo, ECLI) quando il cookie è assente o scaduto
 
 **Non usare Puppeteer/Playwright** per aggirare le protezioni: violerebbe i ToS dei portali, aumenterebbe i tempi di deploy e non risolverebbe in modo affidabile.
 

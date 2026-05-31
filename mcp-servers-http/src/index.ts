@@ -1,24 +1,97 @@
 import express, { type Request, type Response } from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import { rateLimit } from 'express-rate-limit';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { getServerFactory, listServers } from './server-registry.js';
 
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8080;
 
+/**
+ * CORS whitelist — restrict to known origins.
+ */
+const allowedOrigins = [
+  /^https:\/\/[^/]+\.bettercallclaude\.ch$/,
+  /^https:\/\/[^/]+\.bettercallclaude\.it$/,
+  /^https:\/\/bettercallclaude\.ch$/,
+  /^https:\/\/bettercallclaude\.it$/,
+  /^http:\/\/localhost:\d+$/,
+];
+
+function isOriginAllowed(origin: string | undefined): boolean {
+  if (!origin) return true; // allow non-browser clients (curl, server-to-server)
+  return allowedOrigins.some((pattern) => pattern.test(origin));
+}
+
+/**
+ * Security middleware
+ */
+app.use(helmet());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS non consentito per questa origine'));
+      }
+    },
+  })
+);
 app.use(express.json());
 
 /**
- * Health check endpoint — lists all registered servers and their status.
+ * General rate limiter for all routes.
  */
-app.get('/health', (_req: Request, res: Response) => {
-  const servers = listServers();
-  res.json({
-    status: 'ok',
-    servers: servers.length,
-    serverNames: servers.map((s) => s.name),
-    endpoints: servers.map((s) => `/${s.path}/mcp`),
-    timestamp: new Date().toISOString(),
-  });
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req: Request, res: Response) => {
+    res.status(429).json({
+      error: 'Troppe richieste. Attendi prima di riprovare.',
+    });
+  },
+});
+app.use(generalLimiter);
+
+/**
+ * Stricter rate limiter for MCP tool calls.
+ */
+const mcpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req: Request, res: Response) => {
+    res.status(429).json({
+      error: 'Troppe richieste MCP. Attendi prima di riprovare.',
+    });
+  },
+});
+
+/**
+ * Health check rate limiter.
+ */
+const healthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req: Request, res: Response) => {
+    res.status(429).json({
+      error: 'Troppe richieste di health check. Attendi prima di riprovare.',
+    });
+  },
+});
+
+/**
+ * Health check endpoint — minimal info to reduce information disclosure.
+ */
+app.get('/health', healthLimiter, (_req: Request, res: Response) => {
+  res.json({ status: 'ok' });
 });
 
 /**
@@ -42,9 +115,21 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 /**
+ * security.txt endpoint (RFC 9116).
+ */
+app.get('/.well-known/security.txt', (_req: Request, res: Response) => {
+  res.type('text/plain');
+  res.send(
+    'Contact: security@bettercallclaude.ch\n' +
+    'Acknowledgments: https://bettercallclaude.ch/security\n' +
+    'Policy: https://bettercallclaude.ch/security-policy\n'
+  );
+});
+
+/**
  * MCP Streamable HTTP endpoint for each registered server.
  */
-app.post('/:serverName/mcp', async (req: Request, res: Response) => {
+app.post('/:serverName/mcp', mcpLimiter, async (req: Request, res: Response) => {
   const serverName = req.params.serverName;
   if (!serverName) {
     res.status(400).json({

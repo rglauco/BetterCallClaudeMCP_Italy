@@ -309,7 +309,7 @@ export async function getSentenzaItalgiure(id: string): Promise<{
       'italgiure',
       async () => {
         const res = await client.post(SOLR_ENDPOINT, new URLSearchParams({
-          q: `id:"${id}"`,
+          q: `id:"${id.replace(/(["\\])/g, '\\$1')}"`,
           rows: '1',
           wt: 'json',
           fl: 'id,filename,szdec,tipoprov,datdec,numdec,anno,kind,datdep',

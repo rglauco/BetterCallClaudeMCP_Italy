@@ -117,14 +117,10 @@ curl https://<TUO-DOMINIO-RAILWAY>.up.railway.app/health
 
 Risposta attesa:
 ```json
-{
-  "status": "ok",
-  "servers": 7,
-  "serverNames": ["normattiva", "corte-costituzionale", "giustizia-amministrativa", "cassazione", "eur-lex-ita", "legal-citations-ita", "legal-persona-ita"],
-  "endpoints": ["/normattiva/mcp", "/corte-costituzionale/mcp", "/giustizia-amministrativa/mcp", "/cassazione/mcp", "/eur-lex-ita/mcp", "/legal-citations-ita/mcp", "/legal-persona-ita/mcp"],
-  "timestamp": "..."
-}
+{ "status": "ok" }
 ```
+
+> **Nota:** dall'audit di sicurezza (maggio 2026), `/health` restituisce solo `status` per ridurre l'information disclosure.
 
 ### Auto-deploy
 
@@ -181,6 +177,10 @@ GET https://<TUO-DOMINIO>/health
 | `PORT` | 8080 | Porta aggregatore HTTP (Railway la sovrascrive automaticamente) |
 | `NORMATTIVA_API_BASE` | `https://api.normattiva.it/t/normattiva.api` | Base URL API Normattiva |
 | `NODE_ENV` | — | `production` o `development` |
+| `RATE_LIMIT_WINDOW_MS` | `900000` (15 min) | Finestra temporale per il rate limiting (ms) |
+| `RATE_LIMIT_MAX` | `100` | Richieste massime per finestra (generico) |
+| `MCP_RATE_LIMIT_MAX` | `30` | Richieste massime per finestra su endpoint MCP |
+| `HEALTH_RATE_LIMIT_MAX` | `60` | Richieste massime per finestra su `/health` |
 
 Per aggiungere variabili su Railway:
 1. Dashboard → Servizio → **Variables**

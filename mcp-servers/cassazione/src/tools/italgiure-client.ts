@@ -188,7 +188,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
 
   try {
     const result = await fetchWithRetry(
-      'italgiure',
+      'cassazione',
       async () => {
         const res = await client.post(SOLR_ENDPOINT, new URLSearchParams({
           q,

@@ -21,10 +21,14 @@ https://mcp-italia.bettercallclaude.ch
 | `normattiva` | Legislazione italiana (1861–oggi) | `/normattiva/mcp` |
 | `corte-costituzionale` | Sentenze Corte Costituzionale | `/corte-costituzionale/mcp` |
 | `giustizia-amministrativa` | TAR e Consiglio di Stato | `/giustizia-amministrativa/mcp` |
-| `cassazione` | Giurisprudenza Corte di Cassazione | `/cassazione/mcp` |
+| `cassazione` | Giurisprudenza Corte di Cassazione (via ItalGiure Solr) | `/cassazione/mcp` |
 | `eur-lex-ita` | Diritto UE in lingua italiana | `/eur-lex-ita/mcp` |
 | `legal-citations-ita` | Validazione citazioni normative italiane | `/legal-citations-ita/mcp` |
 | `legal-persona-ita` | Drafting documenti giuridici italiani | `/legal-persona-ita/mcp` |
+
+### Note sui server
+
+- **`cassazione`**: richiede un cookie di sessione attivo da [ItalGiure](https://www.italgiure.giustizia.it/sncass/) (accesso con SPID o credenziali professionali). Configura la variabile d'ambiente `ITALGIURE_COOKIE` o salva il cookie in un file `italgiure_cookie.txt` nella working directory. Se il cookie non è configurato, il tool restituisce URL di fallback per la consultazione manuale.
 
 ## Configurazione plugin BetterCallClaude
 

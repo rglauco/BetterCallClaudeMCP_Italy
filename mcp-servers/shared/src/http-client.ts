@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import https from 'https';
 import pRetry from 'p-retry';
 import { withRateLimit } from './rate-limiter.js';
 
@@ -6,21 +7,31 @@ export interface HttpClientOptions {
   baseURL?: string;
   timeout?: number;
   headers?: Record<string, string>;
+  rejectUnauthorized?: boolean;
 }
 
 /**
  * Create a configured HTTP client for Italian legal APIs.
  */
 export function createHttpClient(options: HttpClientOptions = {}): AxiosInstance {
-  return axios.create({
+  const axiosOptions: Record<string, unknown> = {
     timeout: options.timeout ?? 30000,
     headers: {
       Accept: 'application/json',
       'User-Agent': 'BetterCallClaude-Italia-MCP/1.0.0 (Italian Legal Intelligence)',
       ...options.headers,
     },
-    ...options,
-  });
+  };
+
+  if (options.baseURL) {
+    axiosOptions.baseURL = options.baseURL;
+  }
+
+  if (options.rejectUnauthorized === false) {
+    axiosOptions.httpsAgent = new https.Agent({ rejectUnauthorized: false });
+  }
+
+  return axios.create(axiosOptions);
 }
 
 /**

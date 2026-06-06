@@ -1,43 +1,46 @@
-import { fetchWithRetry, parseApiError } from '@bettercallclaude-italia/shared';
+import { getSentenzaItalgiure } from './italgiure-client.js';
 import type { GetSentenzaInput } from '../types.js';
 
+/**
+ * Retrieve a single Cassation Court decision via ItalGiure Solr API.
+ *
+ * Requires an active ItalGiure session cookie (ITALGIURE_COOKIE env var
+ * or italgiure_cookie.txt file). When the cookie is missing or expired,
+ * the tool returns structured fallback information.
+ */
 export async function getSentenzaCassazione(input: GetSentenzaInput): Promise<{
   id: string;
-  url?: string;
-  testo?: string;
-  note: string;
+  estremi?: string;
+  sezione?: string;
+  tipo?: string;
+  dataDecisione?: string;
+  dataDeposito?: string;
+  urlPdf?: string;
+  autenticazione: {
+    cookieValido: boolean;
+    messaggio?: string;
+  };
+  fallback?: {
+    urlItalgiure: string;
+    urlSentenzeWeb: string;
+    istruzioni: string;
+  };
 }> {
-  const url = `https://www.cortedicassazione.it/corte-di-cassazione/it/sentenzeW.html?id=${encodeURIComponent(input.id)}`;
+  const result = await getSentenzaItalgiure(input.id);
 
-  try {
-    const html = await fetchWithRetry(
-      'cassazione',
-      () =>
-        fetch(url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (BetterCallClaude-MCP/1.0)',
-            Accept: 'text/html',
-          },
-        }).then(async (res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.text();
-        }),
-      { retries: 2 }
-    );
-
+  if (result.success) {
     return {
-      id: input.id,
-      url,
-      testo: html.substring(0, 5000),
-      note: 'Porzione pubblica. Per massime complete consultare ItalGiure.',
-    };
-  } catch (error) {
-    const parsed = parseApiError(error);
-    return {
-      id: input.id,
-      url,
-      testo: `Errore: ${parsed.message}.`,
-      note: 'Accesso completo riservato agli operatori giuridici su ItalGiure.',
+      ...result.sentenza,
+      autenticazione: { cookieValido: true },
     };
   }
+
+  return {
+    id: input.id,
+    autenticazione: {
+      cookieValido: false,
+      messaggio: result.fallback.istruzioni,
+    },
+    fallback: result.fallback,
+  };
 }

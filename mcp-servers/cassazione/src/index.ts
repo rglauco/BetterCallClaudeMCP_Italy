@@ -14,33 +14,46 @@ import { getSentenzaCassazione } from './tools/get-sentenza.js';
 const tools: Tool[] = [
   {
     name: 'cassazione_search_massime',
-    description: `Ricerca massime della Corte di Cassazione (porzione pubblica).
+    description: `Ricerca sentenze e massime della Corte di Cassazione tramite API Solr di ItalGiure (CED Ministero della Giustizia).
 
-⚠️ LIMITAZIONE: il portale della Corte di Cassazione (cortedicassazione.it) blocca sistematicamente l'accesso con HTTP 403. Lo scraping non è possibile. Il tool restituisce URL di ricerca alternativi (ItalGiure per operatori del diritto) e suggerimenti per la consultazione manuale.
+🔐 AUTENTICAZIONE: richiede un cookie di sessione ItalGiure attivo. Configura la variabile d'ambiente ITALGIURE_COOKIE oppure salva il cookie in un file italgiure_cookie.txt nella working directory. Per ottenere il cookie: accedi a https://www.italgiure.giustizia.it/sncass/ con SPID o credenziali professionali, poi esegui document.cookie nel browser.
 
 Parametri:
-- query (obbligatorio): parole chiave
-- page / pageSize: paginazione`,
+- query (obbligatorio): parole chiave o sintassi Solr (es. "responsabilita medica")
+- materia (opzionale): "civile" o "penale"
+- anno (opzionale): anno della sentenza (es. 2024)
+- tipo (opzionale): "sentenza", "ordinanza" o "decreto"
+- page (opzionale): numero pagina (default 1)
+- pageSize (opzionale): risultati per pagina, max 50 (default 20)
+
+Se il cookie non è configurato o scaduto, il tool restituisce URL di fallback (ItalGiure, Google, DuckDuckGo, ECLI) e istruzioni per aggiornare la sessione.`,
     inputSchema: {
       type: 'object',
       properties: {
-        query: { type: 'string' },
-        page: { type: 'number', minimum: 1 },
-        pageSize: { type: 'number', minimum: 1, maximum: 50 },
+        query: { type: 'string', description: 'Parole chiave di ricerca' },
+        materia: { type: 'string', enum: ['civile', 'penale'], description: 'Materia della sentenza' },
+        anno: { type: 'number', minimum: 1, description: 'Anno della sentenza' },
+        tipo: { type: 'string', enum: ['sentenza', 'ordinanza', 'decreto'], description: 'Tipo di provvedimento' },
+        page: { type: 'number', minimum: 1, description: 'Numero pagina' },
+        pageSize: { type: 'number', minimum: 1, maximum: 50, description: 'Risultati per pagina' },
       },
       required: ['query'],
     },
   },
   {
     name: 'cassazione_get_sentenza',
-    description: `Recupera sentenza Cassazione (porzione pubblica).
+    description: `Recupera i metadati di una singola sentenza della Corte di Cassazione tramite ItalGiure.
+
+🔐 AUTENTICAZIONE: richiede cookie di sessione ItalGiure (ITALGIURE_COOKIE o italgiure_cookie.txt).
 
 Parametri:
-- id (obbligatorio): identificativo`,
+- id (obbligatorio): identificativo sentenza (es. snciv2024332127S)
+
+Restituisce estremi, sezione, tipo, date e URL al PDF quando disponibili. Se il cookie manca o scade, restituisce istruzioni di autenticazione e URL di fallback.`,
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string' },
+        id: { type: 'string', description: 'Identificativo sentenza' },
       },
       required: ['id'],
     },
